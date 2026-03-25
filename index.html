@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Controle financeiro</title>
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <!-- iOS Apple PWA support -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Gastos">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Controle financeiro</h1>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="home">Página Inicial</button>
+            <button class="tab-btn" data-tab="table">Tabela</button>
+        </nav>
+
+        <div id="tab-home" class="tab-content active">
+
+        <section class="balance-card">
+            <h2>Saldo Atual</h2>
+            <h1 id="balance">R$ 0,00</h1>
+            <div class="summary">
+                <div class="summary-item income">
+                    <span>Entradas</span>
+                    <span id="income">R$ 0,00</span>
+                </div>
+                <div class="summary-item expense">
+                    <span>Saídas</span>
+                    <span id="expense">R$ 0,00</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="transaction-form">
+            <h3>Nova Transação</h3>
+            <form id="form">
+                <div class="form-group">
+                    <input type="text" id="text" placeholder="Despesa" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="amount" placeholder="Valor" step="0.01" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input type="date" id="dateInput" autocomplete="off" title="Data da transação (Opcional)">
+                </div>
+                <div class="form-radio-group">
+                    <label>
+                        <input type="radio" name="type" value="income" checked> 
+                        <span class="radio-btn radio-income">↑ Entrada</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="type" value="expense"> 
+                        <span class="radio-btn radio-expense">↓ Saída</span>
+                    </label>
+                </div>
+                <button class="btn" type="submit">Adicionar Transação</button>
+            </form>
+        </section>
+        </div>
+
+        <div id="tab-table" class="tab-content">
+        <section class="transaction-list">
+            <h3>Histórico</h3>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="income">Entradas</button>
+                <button class="filter-btn" data-filter="expense">Saídas</button>
+            </div>
+            <div class="table-total-container" style="text-align: center; margin-bottom: 20px;">
+                <h4 style="color: var(--text-secondary); font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Valor Total</h4>
+                <div id="visible-total" style="font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">R$ 0,00</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>Saldo</th>
+                            <th>Despesa</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list">
+                        <!-- Transactions from app.js will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+    </div>
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="text-align: center; margin-bottom: 20px;">Editar Transação</h3>
+            <div class="form-group">
+                <input type="text" id="edit-text" placeholder="Despesa" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="number" id="edit-amount" placeholder="Valor" step="0.01" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="date" id="edit-date" autocomplete="off" title="Data da transação">
+            </div>
+            <div class="form-radio-group">
+                <label>
+                    <input type="radio" name="edit-type" value="income"> 
+                    <span class="radio-btn radio-income">↑ Entrada</span>
+                </label>
+                <label>
+                    <input type="radio" name="edit-type" value="expense"> 
+                    <span class="radio-btn radio-expense">↓ Saída</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn" id="btn-cancel-edit" style="flex: 1; padding: 12px; background: #475569; box-shadow: none; font-size: 14px;">Cancelar</button>
+                <button class="btn delete-btn" id="btn-delete-edit" style="flex: 1; margin: 0; padding: 12px; border-radius: 14px; background: rgba(239, 68, 68, 0.15); color: var(--accent-expense); font-size: 14px; box-shadow: none;">Excluir</button>
+                <button class="btn" id="btn-save-edit" style="flex: 1; padding: 12px; font-size: 14px;">Salvar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="./app.js"></script>
+</body>
+</html>
