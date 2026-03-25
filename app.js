@@ -7,6 +7,11 @@ const text = document.getElementById('text');
 const amount = document.getElementById('amount');
 const dateInput = document.getElementById('dateInput');
 
+const formPending = document.getElementById('form-pending');
+const textPending = document.getElementById('text-pending');
+const amountPending = document.getElementById('amount-pending');
+const listPending = document.getElementById('list-pending');
+
 // Tab Switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -32,21 +37,55 @@ document.addEventListener('touchend', e => {
     const distance = touchEndX - touchStartX;
     if (Math.abs(distance) < 50) return; // Ignora swipes curtos
 
+    const isPendingActive = document.getElementById('tab-pending').classList.contains('active');
     const isHomeActive = document.getElementById('tab-home').classList.contains('active');
+    const isTableActive = document.getElementById('tab-table').classList.contains('active');
     
-    // Swipe left -> Vai para Tabela
-    if (distance < -50 && isHomeActive) {
-        document.querySelector('[data-tab="table"]').click();
+    // Swipe left (<-) vai para a direita nas tabs (Pendente -> Home -> Table)
+    if (distance < -50) {
+        if (isPendingActive) document.querySelector('[data-tab="home"]').click();
+        else if (isHomeActive) document.querySelector('[data-tab="table"]').click();
     }
-    // Swipe right -> Vai para Home
-    else if (distance > 50 && !isHomeActive) {
-        document.querySelector('[data-tab="home"]').click();
+    // Swipe right (->) vai para a esquerda nas tabs (Table -> Home -> Pendente)
+    else if (distance > 50) {
+        if (isTableActive) document.querySelector('[data-tab="home"]').click();
+        else if (isHomeActive) document.querySelector('[data-tab="pending"]').click();
     }
 }, { passive: true });
 
 // Recuperar do localStorage
 const localStorageTransactions = JSON.parse(localStorage.getItem('transactions'));
 let transactions = localStorage.getItem('transactions') !== null ? localStorageTransactions : [];
+
+const localStoragePending = JSON.parse(localStorage.getItem('pendingTransactions'));
+let pendingTransactions = localStorage.getItem('pendingTransactions') !== null ? localStoragePending : [];
+
+function updatePendingLocalStorage() {
+    localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
+}
+
+function addPendingDOM(pending) {
+    const isExpense = pending.type === 'expense';
+    const sign = isExpense ? '-' : '+';
+    const item = document.createElement('li');
+
+    item.classList.add(isExpense ? 'minus' : 'plus');
+    
+    item.innerHTML = `
+        <div class="pend-info">
+            <span class="t-name">${pending.text}</span>
+            <span class="t-amount ${isExpense ? 'minus-text' : 'plus-text'}">${sign} ${formatCurrency(Math.abs(pending.amount))}</span>
+        </div>
+        <button class="check-btn" onclick="completePending(${pending.id}, this)" title="Marcar como concluído">✓</button>
+    `;
+
+    listPending.appendChild(item);
+}
+
+function renderPendingList() {
+    listPending.innerHTML = '';
+    pendingTransactions.forEach(addPendingDOM);
+}
 
 // Formata para a moeda Brasileira R$
 function formatCurrency(value) {
@@ -171,6 +210,47 @@ window.removeTransaction = function(id) {
     init();
 }
 
+window.completePending = function(id, btnElement) {
+    const pendingItem = pendingTransactions.find(p => p.id === id);
+    if (!pendingItem) return;
+
+    if (btnElement) {
+        const liElement = btnElement.closest('li');
+        if (liElement) {
+            liElement.style.transition = "all 0.4s ease";
+            liElement.style.transform = "translateX(50px)";
+            liElement.style.opacity = "0";
+        }
+    }
+
+    setTimeout(() => {
+        // Remove from pending
+        pendingTransactions = pendingTransactions.filter(p => p.id !== id);
+        updatePendingLocalStorage();
+        renderPendingList();
+
+        // Add to real transactions
+        const finalDate = new Date().toISOString();
+        const transaction = {
+            id: Math.floor(Math.random() * 100000000),
+            text: pendingItem.text,
+            amount: pendingItem.amount,
+            type: pendingItem.type,
+            date: finalDate
+        };
+
+        transactions.unshift(transaction);
+        transactions.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        
+        renderList();
+        updateValues();
+        updateLocalStorage();
+
+        // Volta para a aba de Tabela para mostrar que adicionou
+        document.querySelector('[data-tab="table"]').click();
+    }, 400);
+}
+
 // Atualiza localStorage
 function updateLocalStorage() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
@@ -179,6 +259,7 @@ function updateLocalStorage() {
 // Init App (Lê dados e re-renderiza lista)
 function init() {
     renderList();
+    renderPendingList();
     updateValues();
 }
 
@@ -218,6 +299,31 @@ form.addEventListener('submit', (e) => {
     
     // Rola a lista para o topo para mostrar o item novo em telas pequenas
     init(); 
+});
+
+formPending.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    if (textPending.value.trim() === '' || amountPending.value.trim() === '') {
+        alert('Por favor preencha nome e valor');
+        return;
+    }
+
+    const typeValue = document.querySelector('input[name="type-pending"]:checked').value;
+
+    const pending = {
+        id: Math.floor(Math.random() * 100000000),
+        text: textPending.value,
+        amount: Math.abs(+amountPending.value),
+        type: typeValue
+    };
+
+    pendingTransactions.unshift(pending);
+    renderPendingList();
+    updatePendingLocalStorage();
+
+    textPending.value = '';
+    amountPending.value = '';
 });
 
 // Modal Logic
