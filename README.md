@@ -14,8 +14,8 @@ Um simples e elegante aplicativo web para controle financeiro pessoal. Projetado
 ### Página Inicial (Resumo e Nova Transação)
 ![Página Inicial](./images/inicial.png)
 
-### Histórico Vazio
-![Histórico Vazio](./docs/empty.png)
+### Aba de Pendências
+![Pendências](./images/pendente.png)
 
 ### Tabela de Transações
 ![Tabela](./images/tabela.png)
