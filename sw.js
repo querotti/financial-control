@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gastos-v1';
+const CACHE_NAME = 'gastos-v2';
 const assets = [
   './',
   './index.html',
@@ -16,6 +16,19 @@ self.addEventListener('install', event => {
       .then(cache => {
         return cache.addAll(assets);
       })
+      .then(() => self.skipWaiting()) // Força o novo SW a assumir imediatamente
+  );
+});
+
+// Ativação e limpeza de caches antigos
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys
+        .filter(key => key !== CACHE_NAME) // Apaga os que não são v2
+        .map(key => caches.delete(key))
+      );
+    })
   );
 });
 
