@@ -12,13 +12,13 @@ Um simples e elegante aplicativo web para controle financeiro pessoal. Projetado
 ## Telas do Aplicativo
 
 ### Página Inicial (Resumo e Nova Transação)
-![Página Inicial](./docs/home.png)
+![Página Inicial](./images/inicial.png)
 
-### Histórico Vazio
-![Histórico Vazio](./docs/empty.png)
+### Aba de Pendências
+![Pendências](./images/pendente.png)
 
 ### Tabela de Transações
-![Tabela](./docs/table.png)
+![Tabela](./images/tabela.png)
 
 ## Como Usar
 Basta acessar o link do GitHub Pages gerado por este repositório através do navegador do celular. Depois, vá nas opções do navegador e clique em **"Adicionar à Tela de Início"**.
