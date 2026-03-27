@@ -26,6 +26,7 @@
             <button class="tab-btn" data-tab="pending">Pendente</button>
             <button class="tab-btn active" data-tab="home">Página Inicial</button>
             <button class="tab-btn" data-tab="table">Tabela</button>
+            <button class="tab-btn" data-tab="yields">Rendimentos</button>
         </nav>
 
         <div id="tab-pending" class="tab-content">
@@ -138,6 +139,37 @@
                         </tbody>
                     </table>
                 </div>
+            </section>
+        </div>
+
+        <div id="tab-yields" class="tab-content">
+            <section class="balance-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-bottom: 24px;">
+                <h2>Total em Rendimentos</h2>
+                <h1 id="yields-balance">R$ 0,00</h1>
+                <p id="yields-daily-total" style="color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 8px;">+ R$ 0,00 / dia</p>
+            </section>
+
+            <section class="transaction-form" style="margin-bottom: 24px;">
+                <h3>Novo Rendimento</h3>
+                <form id="form-yield">
+                    <div class="form-group">
+                        <input type="text" id="text-yield" placeholder="Descrição" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="amount-yield" placeholder="Valor Investido (R$)" step="0.01" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="daily-yield-amount" placeholder="Rendimento Diário (R$)" step="0.01" required autocomplete="off">
+                    </div>
+                    <button class="btn" type="submit" style="background: #10b981;">Adicionar Rendimento</button>
+                </form>
+            </section>
+
+            <section class="transaction-list">
+                <h3>Meus Rendimentos</h3>
+                <ul id="list-yield" class="list-pending">
+                    <!-- Yield items here -->
+                </ul>
             </section>
         </div>
     </div>

@@ -12,6 +12,12 @@ const textPending = document.getElementById('text-pending');
 const amountPending = document.getElementById('amount-pending');
 const listPending = document.getElementById('list-pending');
 
+const formYield = document.getElementById('form-yield');
+const textYield = document.getElementById('text-yield');
+const amountYield = document.getElementById('amount-yield');
+const dailyYieldAmount = document.getElementById('daily-yield-amount');
+const listYield = document.getElementById('list-yield');
+const yieldsDailyTotalEl = document.getElementById('yields-daily-total');
 // Tab Switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -20,6 +26,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         
         e.target.classList.add('active');
         document.getElementById(`tab-${e.target.dataset.tab}`).classList.add('active');
+        if (e.target.dataset.tab === 'yields') updateYields();
     });
 });
 
@@ -40,15 +47,18 @@ document.addEventListener('touchend', e => {
     const isPendingActive = document.getElementById('tab-pending').classList.contains('active');
     const isHomeActive = document.getElementById('tab-home').classList.contains('active');
     const isTableActive = document.getElementById('tab-table').classList.contains('active');
+    const isYieldsActive = document.getElementById('tab-yields').classList.contains('active');
     
-    // Swipe left (<-) vai para a direita nas tabs (Pendente -> Home -> Table)
+    // Swipe left (<-) vai para a direita nas tabs (Pendente -> Home -> Table -> Rendimentos)
     if (distance < -50) {
         if (isPendingActive) document.querySelector('[data-tab="home"]').click();
         else if (isHomeActive) document.querySelector('[data-tab="table"]').click();
+        else if (isTableActive) document.querySelector('[data-tab="yields"]').click();
     }
-    // Swipe right (->) vai para a esquerda nas tabs (Table -> Home -> Pendente)
+    // Swipe right (->) vai para a esquerda nas tabs (Rendimentos -> Table -> Home -> Pendente)
     else if (distance > 50) {
-        if (isTableActive) document.querySelector('[data-tab="home"]').click();
+        if (isYieldsActive) document.querySelector('[data-tab="table"]').click();
+        else if (isTableActive) document.querySelector('[data-tab="home"]').click();
         else if (isHomeActive) document.querySelector('[data-tab="pending"]').click();
     }
 }, { passive: true });
@@ -59,6 +69,85 @@ let transactions = localStorage.getItem('transactions') !== null ? localStorageT
 
 const localStoragePending = JSON.parse(localStorage.getItem('pendingTransactions'));
 let pendingTransactions = localStorage.getItem('pendingTransactions') !== null ? localStoragePending : [];
+
+let localStorageYields = JSON.parse(localStorage.getItem('yieldsData'));
+
+// Migração: se for o formato antigo (objeto único sem array), converte para array
+if (localStorageYields && !Array.isArray(localStorageYields)) {
+    localStorageYields = [{
+        id: Math.floor(Math.random() * 100000000),
+        text: 'Rendimento Antigo',
+        baseAmount: 0,
+        dailyYield: 3.60,
+        currentBalance: localStorageYields.balance || 0,
+        lastUpdated: localStorageYields.lastUpdated || new Date().toISOString().split('T')[0]
+    }];
+    localStorage.setItem('yieldsData', JSON.stringify(localStorageYields));
+}
+
+let yieldsData = localStorageYields || [];
+
+function saveYields() {
+    localStorage.setItem('yieldsData', JSON.stringify(yieldsData));
+}
+
+function updateYields() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    let hasChanges = false;
+    let totalBalance = 0;
+    let totalDaily = 0;
+
+    yieldsData.forEach(item => {
+        if (item.lastUpdated !== todayStr) {
+            const lastUpdatedDate = new Date(item.lastUpdated);
+            const currentDate = new Date(todayStr);
+            const diffTime = Math.abs(currentDate.getTime() - lastUpdatedDate.getTime());
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) {
+                item.currentBalance += diffDays * item.dailyYield;
+                item.lastUpdated = todayStr;
+                hasChanges = true;
+            }
+        }
+        totalBalance += item.currentBalance;
+        totalDaily += item.dailyYield;
+    });
+
+    if (hasChanges) {
+        saveYields();
+    }
+
+    const yieldsBalanceEl = document.getElementById('yields-balance');
+    if (yieldsBalanceEl) yieldsBalanceEl.innerText = formatCurrency(totalBalance);
+    if (yieldsDailyTotalEl) yieldsDailyTotalEl.innerText = `+ ${formatCurrency(totalDaily)} / dia`;
+}
+
+function renderYieldsList() {
+    listYield.innerHTML = '';
+    yieldsData.forEach(item => {
+        const li = document.createElement('li');
+        li.classList.add('plus');
+        li.innerHTML = `
+            <div class="pend-info">
+                <span class="t-name">${item.text} <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">(Investido: ${formatCurrency(item.baseAmount)})</span></span>
+                <span class="t-amount plus-text" style="font-size: 14px; margin-top: 2px;">${formatCurrency(item.currentBalance)}</span>
+                <span style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Rende: ${formatCurrency(item.dailyYield)} / dia</span>
+            </div>
+            <button class="check-btn" onclick="deleteYield(${item.id})" title="Remover Rendimento" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">✕</button>
+        `;
+        listYield.appendChild(li);
+    });
+}
+
+window.deleteYield = function(id) {
+    if(confirm('Tem certeza que deseja remover este rendimento? Ele deixará de somar no total.')) {
+        yieldsData = yieldsData.filter(y => y.id !== id);
+        saveYields();
+        updateYields();
+        renderYieldsList();
+    }
+}
 
 function updatePendingLocalStorage() {
     localStorage.setItem('pendingTransactions', JSON.stringify(pendingTransactions));
@@ -261,6 +350,8 @@ function init() {
     renderList();
     renderPendingList();
     updateValues();
+    updateYields();
+    renderYieldsList();
 }
 
 // Lidar com o Submit do formulário imediatamente
@@ -324,6 +415,36 @@ formPending.addEventListener('submit', (e) => {
 
     textPending.value = '';
     amountPending.value = '';
+});
+
+formYield.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    if (textYield.value.trim() === '' || amountYield.value.trim() === '' || dailyYieldAmount.value.trim() === '') {
+        alert('Por favor preencha todos os campos do rendimento');
+        return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const newYield = {
+        id: Math.floor(Math.random() * 100000000),
+        text: textYield.value,
+        baseAmount: Math.abs(+amountYield.value),
+        dailyYield: Math.abs(+dailyYieldAmount.value),
+        currentBalance: Math.abs(+amountYield.value),
+        lastUpdated: todayStr
+    };
+
+    yieldsData.push(newYield);
+    saveYields();
+    
+    updateYields();
+    renderYieldsList();
+
+    textYield.value = '';
+    amountYield.value = '';
+    dailyYieldAmount.value = '';
 });
 
 // Modal Logic
